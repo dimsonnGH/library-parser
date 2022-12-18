@@ -8,7 +8,7 @@ def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
 
-def download_txt(url, filename, folder='books/'):
+def download_txt(url, params, filename, folder='books/'):
     """Функция для скачивания текстовых файлов.
     Args:
         url (str): Cсылка на текст, который хочется скачать.
@@ -20,23 +20,24 @@ def download_txt(url, filename, folder='books/'):
 
     '''params = {'id': book_id}
     response = requests.get(url, params=params)'''
-    response = requests.get(url)
+    response = requests.get(url, params=params)
     response.raise_for_status()
 
     try:
         check_for_redirect(response)
     except requests.HTTPError:
-        print(f'book {url} is not download ')
+        response_url = response.history[0].url
+        print(f'book <{filename}> is not download ')
         return None
 
     clear_book_name = sanitize_filename(filename)
-    filename = os.path.join(folder, f'{clear_book_name}.txt')
+    file_path = os.path.join(folder, f'{clear_book_name}.txt')
     print(f'{clear_book_name}')
 
-    with open(filename, 'wb') as file:
+    with open(file_path, 'wb') as file:
         file.write(response.content)
 
-    return  filename
+    return file_path
 
 def main():
     # url = "https://dvmn.org/filer/canonical/1542890876/16/"
@@ -55,13 +56,14 @@ def main():
     for book_id in range(first_id, first_id + 10):
 
         url = f'https://tululu.org/b{book_id}/'
+
         response = requests.get(url)
         response.raise_for_status()
 
         try:
             check_for_redirect(response)
         except requests.HTTPError:
-            print(f'book {book_id} is not download ')
+            print(f'book book_id={book_id} is not download ')
             continue
 
 
@@ -69,10 +71,12 @@ def main():
 
         title_tag = soup.find('h1')
         book_name, author = (name_part.strip() for name_part in title_tag.text.split('::'))
+        book_file_name = f'{book_id}. {book_name}'
 
         url = 'https://tululu.org/txt.php' #f'{url_template}{book_id}'
         params = {'id': book_id}
-        response = requests.get(url, params=params)
+        download_txt(url, params, book_file_name)
+        """response = requests.get(url, params=params)
         response.raise_for_status()
 
         try:
@@ -82,11 +86,11 @@ def main():
             continue
 
         clear_book_name = sanitize_filename(book_name)
-        filename = os.path.join(folder_name, f'{clear_book_name}.txt')
+        filename = os.path.join(folder_name, f'{book_id}. {clear_book_name}.txt')
         print(f'{book_id} - {book_name} - {author} - {clear_book_name}')
 
         with open(filename, 'wb') as file:
-            file.write(response.content)
+            file.write(response.content)"""
 
 
 def test():
@@ -104,5 +108,5 @@ def test():
 
 
 if __name__ == '__main__':
-    #main()
-    test()
+    main()
+    #test()
