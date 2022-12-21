@@ -2,7 +2,7 @@ import requests
 import os
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-
+from urllib.parse import urljoin, urlparse, unquote
 
 def check_for_redirect(response):
     if response.history:
@@ -11,7 +11,8 @@ def check_for_redirect(response):
 def download_txt(url, params, filename, folder='books/'):
     """Функция для скачивания текстовых файлов.
     Args:
-        url (str): Cсылка на текст, который хочется скачать.
+        url (str): Адрес ресурса, с которого нужно скачать текст.
+        params (dict): Параметры запроса
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
     Returns:
@@ -26,13 +27,34 @@ def download_txt(url, params, filename, folder='books/'):
     try:
         check_for_redirect(response)
     except requests.HTTPError:
-        response_url = response.history[0].url
+        #response_url = response.history[0].url
         print(f'book <{filename}> is not download ')
         return None
 
     clear_book_name = sanitize_filename(filename)
     file_path = os.path.join(folder, f'{clear_book_name}.txt')
     print(f'{clear_book_name}')
+
+    with open(file_path, 'wb') as file:
+        file.write(response.content)
+
+    return file_path
+
+def download_image(url, params, filename, folder='imgs/'):
+    """Функция для скачивания изображений.
+    Args:
+        url (str): Адрес ресурса, с которого нужно скачать изображение.
+        params (dict): Параметры запроса
+        filename (str): Имя файла, с которым сохранять.
+        folder (str): Папка, куда сохранять.
+    Returns:
+        str: Путь до файла, куда сохранён текст.
+    """
+
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+
+    file_path = os.path.join(folder, f'{filename}')
 
     with open(file_path, 'wb') as file:
         file.write(response.content)
@@ -50,8 +72,8 @@ def main():
     url_book_page = 'https://tululu.org/b32168/'
 
     first_id = 1  # 32168
-    folder_name = 'books'
-    os.makedirs(folder_name, exist_ok=True)
+    for folder_name in ['books', 'imgs', ]:
+        os.makedirs(folder_name, exist_ok=True)
 
     for book_id in range(first_id, first_id + 10):
 
@@ -75,22 +97,21 @@ def main():
 
         url = 'https://tululu.org/txt.php' #f'{url_template}{book_id}'
         params = {'id': book_id}
-        download_txt(url, params, book_file_name)
-        """response = requests.get(url, params=params)
-        response.raise_for_status()
+        file_path = download_txt(url, params, book_file_name)
 
-        try:
-            check_for_redirect(response)
-        except requests.HTTPError:
-            print(f'book {book_id} is not download ')
+        if not file_path:
             continue
 
-        clear_book_name = sanitize_filename(book_name)
-        filename = os.path.join(folder_name, f'{book_id}. {clear_book_name}.txt')
-        print(f'{book_id} - {book_name} - {author} - {clear_book_name}')
+        img_url = urljoin(response.url, soup.find('div', class_='bookimage').find('img')['src'])
 
-        with open(filename, 'wb') as file:
-            file.write(response.content)"""
+        url_parts = urlparse(img_url)
+        img_path = url_parts.path
+        img_name = os.path.split(img_path)[-1]
+        img_name = unquote(img_name)
+
+        print(f'{img_name}')
+
+        download_image(img_url, params, img_name)
 
 
 def test():
