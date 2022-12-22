@@ -113,9 +113,13 @@ def main():
 
         download_image(img_url, params, img_name)
 
-        comments = [comment_tag.find('span', class_='black').text for comment_tag in soup.findAll('div', class_='texts')]
+        comments = [tag.find('span', class_='black').text for tag in soup.findAll('div', class_='texts')]
 
         print(comments)
+
+        genres = [tag.text for tag in soup.find('span', class_='d_book').findAll('a')]
+
+        print(genres)
 
 
 def test():
