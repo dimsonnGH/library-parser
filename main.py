@@ -40,18 +40,17 @@ def download_txt(url, params, filename, folder='books/'):
 
     return file_path
 
-def download_image(url, params, filename, folder='imgs/'):
+def download_image(url, filename, folder='imgs/'):
     """Функция для скачивания изображений.
     Args:
         url (str): Адрес ресурса, с которого нужно скачать изображение.
-        params (dict): Параметры запроса
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
     Returns:
         str: Путь до файла, куда сохранён текст.
     """
 
-    response = requests.get(url, params=params)
+    response = requests.get(url)
     response.raise_for_status()
 
     file_path = os.path.join(folder, f'{filename}')
@@ -60,6 +59,40 @@ def download_image(url, params, filename, folder='imgs/'):
         file.write(response.content)
 
     return file_path
+
+def parse_book_page(url):
+
+    response = requests.get(url)
+    response.raise_for_status()
+
+    try:
+        check_for_redirect(response)
+    except requests.HTTPError:
+        print(f'book {url} is not download ')
+        return
+
+    result = {}
+
+    soup = BeautifulSoup(response.text, 'lxml')
+
+    title_tag = soup.find('h1')
+    name, author = (name_part.strip() for name_part in title_tag.text.split('::'))
+    result['name'] = name
+    result['author'] = author
+
+    img_url = urljoin(response.url, soup.find('div', class_='bookimage').find('img')['src'])
+    result['img_url'] = img_url
+
+    url_parts = urlparse(img_url)
+    img_path = url_parts.path
+    result['img_name'] = unquote(os.path.split(img_path)[-1])
+
+    result['comments'] = [tag.find('span', class_='black').text for tag in soup.findAll('div', class_='texts')]
+
+    result['genres'] = [tag.text for tag in soup.find('span', class_='d_book').findAll('a')]
+
+    return result
+
 
 def main():
     # url = "https://dvmn.org/filer/canonical/1542890876/16/"
@@ -79,47 +112,23 @@ def main():
 
         url = f'https://tululu.org/b{book_id}/'
 
-        response = requests.get(url)
-        response.raise_for_status()
+        book_properties = parse_book_page(url)
 
-        try:
-            check_for_redirect(response)
-        except requests.HTTPError:
-            print(f'book book_id={book_id} is not download ')
+        if not book_properties:
             continue
 
-
-        soup = BeautifulSoup(response.text, 'lxml')
-
-        title_tag = soup.find('h1')
-        book_name, author = (name_part.strip() for name_part in title_tag.text.split('::'))
-        book_file_name = f'{book_id}. {book_name}'
+        book_file_name = f"{book_id}. {book_properties['name']}"
 
         url = 'https://tululu.org/txt.php' #f'{url_template}{book_id}'
         params = {'id': book_id}
         file_path = download_txt(url, params, book_file_name)
 
-        if not file_path:
-            continue
+        print(f"{book_properties['img_url']}; {book_properties['img_name']}")
 
-        img_url = urljoin(response.url, soup.find('div', class_='bookimage').find('img')['src'])
+        download_image(book_properties['img_url'], book_properties['img_name'])
 
-        url_parts = urlparse(img_url)
-        img_path = url_parts.path
-        img_name = os.path.split(img_path)[-1]
-        img_name = unquote(img_name)
-
-        print(f'{img_name}')
-
-        download_image(img_url, params, img_name)
-
-        comments = [tag.find('span', class_='black').text for tag in soup.findAll('div', class_='texts')]
-
-        print(comments)
-
-        genres = [tag.text for tag in soup.find('span', class_='d_book').findAll('a')]
-
-        print(genres)
+        print(book_properties['comments'])
+        print(book_properties['genres'])
 
 
 def test():
