@@ -113,6 +113,10 @@ def main():
 
         download_image(img_url, params, img_name)
 
+        comments = [comment_tag.find('span', class_='black').text for comment_tag in soup.findAll('div', class_='texts')]
+
+        print(comments)
+
 
 def test():
     # Примеры использования
