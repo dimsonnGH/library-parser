@@ -3,6 +3,8 @@ import os
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse, unquote
+import argparse
+
 
 def check_for_redirect(response):
     if response.history:
@@ -101,6 +103,15 @@ def main():
     # url = "https://tululu.org/txt.php?id=32168"
     # filename = 'Пески Марса.txt'
 
+    parser = argparse.ArgumentParser(description='Download books from tululu.org')
+    parser.add_argument('--start_id', type=int, default=1, help='First book id, default = 1')
+    parser.add_argument('--end_id', type=int, default=1, help='Last book id, default = 1')
+    args = parser.parse_args()
+
+    if args.start_id > args.end_id:
+        print('start_id cannot be greater than the end_id')
+        return
+
     url_template = 'https://tululu.org/txt.php?id='
     url_book_page = 'https://tululu.org/b32168/'
 
@@ -108,7 +119,7 @@ def main():
     for folder_name in ['books', 'imgs', ]:
         os.makedirs(folder_name, exist_ok=True)
 
-    for book_id in range(first_id, first_id + 10):
+    for book_id in range(args.start_id, args.end_id):
 
         url = f'https://tululu.org/b{book_id}/'
 
