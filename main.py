@@ -60,8 +60,7 @@ def download_image(url, filename, folder='imgs/'):
 
     return file_path
 
-
-def parse_book_page(url):
+def get_book_page(url):
     response = requests.get(url)
     response.raise_for_status()
 
@@ -71,12 +70,16 @@ def parse_book_page(url):
         print(f'book {url} is not download ')
         return
 
-    soup = BeautifulSoup(response.text, 'lxml')
+    return response
+
+def parse_book_page(html):
+
+    soup = BeautifulSoup(html, 'lxml')
 
     title_tag = soup.find('h1')
     name, author = (name_part.strip() for name_part in title_tag.text.split('::'))
 
-    img_url = urljoin(response.url, soup.find('div', class_='bookimage').find('img')['src'])
+    img_url = soup.find('div', class_='bookimage').find('img')['src']
     url_parts = urlparse(img_url)
     img_path = url_parts.path
 
@@ -109,10 +112,12 @@ def main():
 
         url = f'https://tululu.org/b{book_id}/'
 
-        book_properties = parse_book_page(url)
+        response = get_book_page(url)
 
-        if not book_properties:
+        if not response:
             continue
+
+        book_properties = parse_book_page(response.text)
 
         book_file_name = f"{book_id}. {book_properties['name']}"
 
@@ -120,7 +125,8 @@ def main():
         params = {'id': book_id}
         download_txt(url, params, book_file_name)
 
-        download_image(book_properties['img_url'], book_properties['img_name'])
+        img_url = urljoin(response.url, book_properties['img_url'])
+        download_image(img_url, book_properties['img_name'])
 
 
 if __name__ == '__main__':
