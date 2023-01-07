@@ -10,6 +10,7 @@ def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
 
+
 def download_txt(url, params, filename, folder='books/'):
     """Функция для скачивания текстовых файлов.
     Args:
@@ -29,18 +30,17 @@ def download_txt(url, params, filename, folder='books/'):
     try:
         check_for_redirect(response)
     except requests.HTTPError:
-        #response_url = response.history[0].url
         print(f'book <{filename}> is not download ')
         return None
 
     clear_book_name = sanitize_filename(filename)
     file_path = os.path.join(folder, f'{clear_book_name}.txt')
-    print(f'{clear_book_name}')
 
     with open(file_path, 'wb') as file:
         file.write(response.content)
 
     return file_path
+
 
 def download_image(url, filename, folder='imgs/'):
     """Функция для скачивания изображений.
@@ -62,8 +62,8 @@ def download_image(url, filename, folder='imgs/'):
 
     return file_path
 
-def parse_book_page(url):
 
+def parse_book_page(url):
     response = requests.get(url)
     response.raise_for_status()
 
@@ -97,12 +97,6 @@ def parse_book_page(url):
 
 
 def main():
-    # url = "https://dvmn.org/filer/canonical/1542890876/16/"
-    # filename = 'dvmn.svg'
-
-    # url = "https://tululu.org/txt.php?id=32168"
-    # filename = 'Пески Марса.txt'
-
     parser = argparse.ArgumentParser(description='Download books from tululu.org')
     parser.add_argument('--start_id', type=int, default=1, help='First book id, default = 1')
     parser.add_argument('--end_id', type=int, default=1, help='Last book id, default = 1')
@@ -112,10 +106,6 @@ def main():
         print('start_id cannot be greater than the end_id')
         return
 
-    url_template = 'https://tululu.org/txt.php?id='
-    url_book_page = 'https://tululu.org/b32168/'
-
-    first_id = 1  # 32168
     for folder_name in ['books', 'imgs', ]:
         os.makedirs(folder_name, exist_ok=True)
 
@@ -130,32 +120,12 @@ def main():
 
         book_file_name = f"{book_id}. {book_properties['name']}"
 
-        url = 'https://tululu.org/txt.php' #f'{url_template}{book_id}'
+        url = 'https://tululu.org/txt.php'
         params = {'id': book_id}
-        file_path = download_txt(url, params, book_file_name)
-
-        print(f"{book_properties['img_url']}; {book_properties['img_name']}")
+        download_txt(url, params, book_file_name)
 
         download_image(book_properties['img_url'], book_properties['img_name'])
-
-        print(book_properties['comments'])
-        print(book_properties['genres'])
-
-
-def test():
-    # Примеры использования
-    url = 'https://tululu.org/txt.php?id=1'
-
-    filepath = download_txt(url, 'Алиби')
-    print(filepath)  # Выведется books/Алиби.txt
-
-    filepath = download_txt(url, 'Али/би', folder='books/')
-    print(filepath)  # Выведется books/Алиби.txt
-
-    filepath = download_txt(url, 'Али\\би', folder='txt/')
-    print(filepath)  # Выведется txt/Алиби.txt
 
 
 if __name__ == '__main__':
     main()
-    #test()
