@@ -71,25 +71,23 @@ def parse_book_page(url):
         print(f'book {url} is not download ')
         return
 
-    result = {}
-
     soup = BeautifulSoup(response.text, 'lxml')
 
     title_tag = soup.find('h1')
     name, author = (name_part.strip() for name_part in title_tag.text.split('::'))
-    result['name'] = name
-    result['author'] = author
 
     img_url = urljoin(response.url, soup.find('div', class_='bookimage').find('img')['src'])
-    result['img_url'] = img_url
-
     url_parts = urlparse(img_url)
     img_path = url_parts.path
-    result['img_name'] = unquote(os.path.split(img_path)[-1])
 
-    result['comments'] = [tag.find('span', class_='black').text for tag in soup.findAll('div', class_='texts')]
-
-    result['genres'] = [tag.text for tag in soup.find('span', class_='d_book').findAll('a')]
+    result = {
+        'name': name,
+        'author': author,
+        'img_url': img_url,
+        'img_name': unquote(os.path.split(img_path)[-1]),
+        'comments': [tag.find('span', class_='black').text for tag in soup.findAll('div', class_='texts')],
+        'genres': [tag.text for tag in soup.find('span', class_='d_book').findAll('a')],
+    }
 
     return result
 
@@ -107,7 +105,7 @@ def main():
     for folder_name in ['books', 'imgs', ]:
         os.makedirs(folder_name, exist_ok=True)
 
-    for book_id in range(args.start_id, args.end_id):
+    for book_id in range(args.start_id, args.end_id + 1):
 
         url = f'https://tululu.org/b{book_id}/'
 
