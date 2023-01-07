@@ -80,7 +80,7 @@ def parse_book_page(url):
     url_parts = urlparse(img_url)
     img_path = url_parts.path
 
-    result = {
+    book_properties = {
         'name': name,
         'author': author,
         'img_url': img_url,
@@ -89,7 +89,7 @@ def parse_book_page(url):
         'genres': [tag.text for tag in soup.find('span', class_='d_book').findAll('a')],
     }
 
-    return result
+    return book_properties
 
 
 def main():
