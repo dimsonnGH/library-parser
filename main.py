@@ -22,8 +22,6 @@ def download_txt(url, params, filename, folder='books/'):
         str: Путь до файла, куда сохранён текст.
     """
 
-    '''params = {'id': book_id}
-    response = requests.get(url, params=params)'''
     response = requests.get(url, params=params)
     response.raise_for_status()
 
