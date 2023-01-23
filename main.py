@@ -4,7 +4,11 @@ from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
 from urllib.parse import urljoin, urlparse, unquote
 import argparse
+import sys
 
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def check_for_redirect(response):
     if response.history:
@@ -24,12 +28,7 @@ def download_txt(url, params, filename, folder='books/'):
 
     response = requests.get(url, params=params)
     response.raise_for_status()
-
-    try:
-        check_for_redirect(response)
-    except requests.HTTPError:
-        print(f'book <{filename}> is not download ')
-        return None
+    check_for_redirect(response)
 
     clear_book_name = sanitize_filename(filename)
     file_path = os.path.join(folder, f'{clear_book_name}.txt')
@@ -63,12 +62,7 @@ def download_image(url, filename, folder='imgs/'):
 def get_book_page(url):
     response = requests.get(url)
     response.raise_for_status()
-
-    try:
-        check_for_redirect(response)
-    except requests.HTTPError:
-        print(f'book {url} is not download ')
-        return
+    check_for_redirect(response)
 
     return response
 
@@ -108,24 +102,38 @@ def main():
     for folder_name in ['books', 'imgs', ]:
         os.makedirs(folder_name, exist_ok=True)
 
+    base_url = 'https://tululu.org'
     for book_id in range(args.start_id, args.end_id + 1):
 
-        url = f'https://tululu.org/b{book_id}/'
+        url = f'{base_url}/b{book_id}/'
 
-        response = get_book_page(url)
-
-        if not response:
+        try:
+            response = get_book_page(url)
+            book_html = response.text
+            response_url = response.url
+        except requests.ConnectionError:
+            eprint(f'{url}. Connection error.')
+            continue
+        except requests.HTTPError:
+            eprint(f'page {url}> not exists')
             continue
 
-        book_properties = parse_book_page(response.text)
+        book_properties = parse_book_page(book_html)
 
         book_file_name = f"{book_id}. {book_properties['name']}"
-
-        url = 'https://tululu.org/txt.php'
+        url = f'{base_url}/txt.php'
         params = {'id': book_id}
-        download_txt(url, params, book_file_name)
 
-        img_url = urljoin(response.url, book_properties['img_url'])
+        try:
+            download_txt(url, params, book_file_name)
+        except requests.ConnectionError:
+            eprint(f'{url}. Connection error.')
+            continue
+        except requests.HTTPError:
+            eprint(f'book id = {book_id} <{book_properties["name"]}> is not download')
+            continue
+
+        img_url = urljoin(response_url, book_properties['img_url'])
         download_image(img_url, book_properties['img_name'])
 
 
