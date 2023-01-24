@@ -130,11 +130,18 @@ def main():
             eprint(f'{url}. Connection error.')
             continue
         except requests.HTTPError:
-            eprint(f'book id = {book_id} <{book_properties["name"]}> is not download')
+            eprint(f'book id = {book_id} <{book_properties["name"]}> is not downloaded')
             continue
 
         img_url = urljoin(response_url, book_properties['img_url'])
-        download_image(img_url, book_properties['img_name'])
+        try:
+            download_image(img_url, book_properties['img_name'])
+        except requests.ConnectionError:
+            eprint(f'{url}. Connection error.')
+            continue
+        except requests.HTTPError:
+            eprint(f'image {img_url} is not downloaded')
+            continue
 
 
 if __name__ == '__main__':
