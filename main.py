@@ -1,3 +1,5 @@
+import time
+
 import requests
 import os
 from bs4 import BeautifulSoup
@@ -99,11 +101,17 @@ def main():
         print('start_id cannot be greater than the end_id')
         return
 
+    DELAY_VALUE = 60
+
     for folder_name in ['books', 'imgs', ]:
         os.makedirs(folder_name, exist_ok=True)
 
     base_url = 'https://tululu.org'
+    delay = 0
     for book_id in range(args.start_id, args.end_id + 1):
+
+        if delay:
+            time.sleep(delay)
 
         url = f'{base_url}/b{book_id}/'
 
@@ -113,13 +121,15 @@ def main():
             response_url = response.url
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
+            delay = DELAY_VALUE
             continue
         except requests.HTTPError:
             eprint(f'page {url}> not exists')
             continue
 
-        book_properties = parse_book_page(book_html)
+        delay = 0
 
+        book_properties = parse_book_page(book_html)
         book_file_name = f"{book_id}. {book_properties['name']}"
         url = f'{base_url}/txt.php'
         params = {'id': book_id}
@@ -128,16 +138,19 @@ def main():
             download_txt(url, params, book_file_name)
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
+            delay = DELAY_VALUE
             continue
         except requests.HTTPError:
             eprint(f'book id = {book_id} <{book_properties["name"]}> is not downloaded')
             continue
 
         img_url = urljoin(response_url, book_properties['img_url'])
+
         try:
             download_image(img_url, book_properties['img_name'])
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
+            delay = DELAY_VALUE
             continue
         except requests.HTTPError:
             eprint(f'image {img_url} is not downloaded')
