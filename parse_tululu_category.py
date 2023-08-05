@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import os
 from main import get_page, parse_book_page, eprint, make_download_folders, download_book_collection
+from main import BASE_URL
 from urllib.parse import urlparse, urljoin
 import json
 
@@ -21,15 +22,13 @@ def parse_category_page(response_url, html, books_description):
 
 
 def main():
-    start_url = 'https://tululu.org/l55/'
+    start_url = f'{BASE_URL}/l55/'
 
     response = get_page(start_url)
     html = response.text
     soup = BeautifulSoup(html, 'lxml')
     tags = soup.findAll('a', class_='npage')
     page_count = int(tags[-1].text)
-
-    print(f'page_count = {page_count}')
 
     books_description = []
 
@@ -59,7 +58,7 @@ def main():
         parse_category_page(url, html, books_description)
 
         #TODO убрать потом
-        if len(books_description) >= 100:
+        if len(books_description) >= 15:
             break
 
 

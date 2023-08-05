@@ -65,8 +65,8 @@ def download_image(url, filename, folder='imgs/'):
 
     file_path = os.path.join(folder, f'{filename}')
 
-    with open(file_path, 'w', encoding="utf-8") as file:
-        file.write(response.text)
+    with open(file_path, 'wb') as file:
+        file.write(response.content)
 
     return file_path
 
