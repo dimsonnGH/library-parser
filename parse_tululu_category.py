@@ -10,9 +10,9 @@ import json
 def parse_category_page(response_url, html, books_description):
     soup = BeautifulSoup(html, 'lxml')
 
-    img_tags = soup.findAll('div', class_='bookimage')
+    img_tags = soup.select('.bookimage a')
     for img_tag in img_tags:
-        book_url = img_tag.find('a')['href']
+        book_url = img_tag['href']
         book_url = urljoin(response_url, book_url)
 
         response = get_page(book_url)
@@ -27,7 +27,7 @@ def main():
     response = get_page(start_url)
     html = response.text
     soup = BeautifulSoup(html, 'lxml')
-    tags = soup.findAll('a', class_='npage')
+    tags = soup.select('a.npage')
     page_count = int(tags[-1].text)
 
     books_description = []

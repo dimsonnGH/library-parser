@@ -44,8 +44,8 @@ def download_txt(url, params, filename, folder='books/'):
     clear_book_name = sanitize_filename(filename)
     file_path = os.path.join(folder, f'{clear_book_name}.txt')
 
-    with open(file_path, 'wb') as file:
-        file.write(response.content)
+    with open(file_path, 'w', encoding="utf-8") as file:
+        file.write(response.text)
 
     return file_path
 
@@ -82,10 +82,10 @@ def parse_book_page(html, url):
 
     soup = BeautifulSoup(html, 'lxml')
 
-    title_tag = soup.find('h1')
+    title_tag = soup.select_one('h1')
     name, author = (name_part.strip() for name_part in title_tag.text.split('::'))
 
-    img_url = soup.find('div', class_='bookimage').find('img')['src']
+    img_url = soup.select_one('.bookimage img')['src']
     url_parts = urlparse(img_url)
     img_path = url_parts.path
 
@@ -95,8 +95,8 @@ def parse_book_page(html, url):
         'url': url,
         'img_url': img_url,
         'img_name': unquote(os.path.split(img_path)[-1]),
-        'comments': [tag.find('span', class_='black').text for tag in soup.findAll('div', class_='texts')],
-        'genres': [tag.text for tag in soup.find('span', class_='d_book').findAll('a')],
+        'comments': [tag.text for tag in soup.select('.texts .black')],
+        'genres': [tag.text for tag in soup.select('span.d_book a')],
     }
 
     return book_properties
