@@ -11,7 +11,6 @@ import sys
 import re
 
 
-DELAY_VALUE = 60
 BASE_URL = 'https://tululu.org'
 
 def eprint(*args, **kwargs):
@@ -79,7 +78,6 @@ def get_page(url):
 
 def parse_book_page(html, url):
 
-
     soup = BeautifulSoup(html, 'lxml')
 
     title_tag = soup.select_one('h1')
@@ -102,6 +100,8 @@ def parse_book_page(html, url):
     return book_properties
 
 def download_book_collection(book_collection):
+
+    DELAY_VALUE = 60
 
     delay = 0
     for book_descriptor in book_collection:

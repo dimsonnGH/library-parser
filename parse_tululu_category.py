@@ -5,6 +5,8 @@ from main import get_page, parse_book_page, eprint, make_download_folders, downl
 from main import BASE_URL
 from urllib.parse import urlparse, urljoin
 import json
+import argparse
+import time
 
 
 def parse_category_page(response_url, html, books_description):
@@ -15,6 +17,8 @@ def parse_category_page(response_url, html, books_description):
         book_url = img_tag['href']
         book_url = urljoin(response_url, book_url)
 
+        print(book_url)
+
         response = get_page(book_url)
         book_html = response.text
         book_properties = parse_book_page(book_html, book_url)
@@ -22,17 +26,26 @@ def parse_category_page(response_url, html, books_description):
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Download science fiction books from tululu.org')
+    parser.add_argument('--start_page', type=int, default=1, help='First science fiction catalog page, default = 1')
+    parser.add_argument('--end_page', type=int, help='Last science fiction catalog page, default = 1')
+    args = parser.parse_args()
+
     start_url = f'{BASE_URL}/l55/'
 
     response = get_page(start_url)
     html = response.text
     soup = BeautifulSoup(html, 'lxml')
     tags = soup.select('a.npage')
-    page_count = int(tags[-1].text)
+    max_page = int(tags[-1].text)
+    end_page = max(args.end_page, max_page) if args.end_page else max_page
 
     books_description = []
-
-    for page_num in range(1, page_count + 1):
+    DELAY_VALUE = 60
+    delay = 0
+    for page_num in range(args.start_page, end_page + 1):
+        if delay:
+            time.sleep(delay)
 
         if page_num == 1:
             page_num_url = ''
@@ -47,20 +60,15 @@ def main():
             # response_url = response.url
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
-            # delay = DELAY_VALUE
-            # continue
+            delay = DELAY_VALUE
+            continue
         except requests.HTTPError:
             eprint(f'page {url}> not exists')
-            # continue
+            continue
 
-        # delay = 0
+        delay = 0
 
         parse_category_page(url, html, books_description)
-
-        #TODO убрать потом
-        if len(books_description) >= 15:
-            break
-
 
     make_download_folders()
 
@@ -73,6 +81,7 @@ def main():
 
     book_collection = (book['url'] for book in books_description)
     download_book_collection(book_collection)
+
 
 if __name__ == '__main__':
     main()
