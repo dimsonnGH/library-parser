@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import os
 from main import get_page, parse_book_page, eprint, make_download_folders, download_book_collection
-from main import BASE_URL
+from main import BASE_URL, TEXTS_FOLDER
 from urllib.parse import urlparse, urljoin
 import json
 import argparse
@@ -29,6 +29,10 @@ def main():
     parser = argparse.ArgumentParser(description='Download science fiction books from tululu.org')
     parser.add_argument('--start_page', type=int, default=1, help='First science fiction catalog page, default = 1')
     parser.add_argument('--end_page', type=int, help='Last science fiction catalog page, default = 1')
+    parser.add_argument('--dest_folder', type=str, default='', help='Folder to download content')
+    parser.add_argument('--skip_imgs', action='store_true', help='Skip download images')
+    parser.add_argument('--skip_txt', action='store_true', help='Skip download texts')
+
     args = parser.parse_args()
 
     start_url = f'{BASE_URL}/l55/'
@@ -70,17 +74,16 @@ def main():
 
         parse_category_page(url, html, books_description)
 
-    make_download_folders()
+    make_download_folders(args.dest_folder)
 
-    folder = 'books/'
     if books_description:
-        file_path = os.path.join(folder, 'books_description.json')
+        file_path = os.path.join(args.dest_folder, TEXTS_FOLDER, 'books_description.json')
         with open(file_path, 'wt', encoding="utf-8") as file:
             dumps = json.dumps(books_description, indent=4, ensure_ascii=False)
             file.write(dumps)
 
     book_collection = (book['url'] for book in books_description)
-    download_book_collection(book_collection)
+    download_book_collection(book_collection, args.dest_folder, skip_imgs=args.skip_imgs, skip_txt=args.skip_txt)
 
 
 if __name__ == '__main__':

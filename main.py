@@ -12,20 +12,22 @@ import re
 
 
 BASE_URL = 'https://tululu.org'
+TEXTS_FOLDER = 'books'
+IMGS_FOLDER = 'imgs'
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def make_download_folders():
-    for folder_name in ['books', 'imgs', ]:
-        os.makedirs(folder_name, exist_ok=True)
+def make_download_folders(dest_folder):
+    for folder_name in [TEXTS_FOLDER, IMGS_FOLDER, ]:
+        os.makedirs(os.path.join(dest_folder, folder_name), exist_ok=True)
 
 def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
 
 
-def download_txt(url, params, filename, folder='books/'):
+def download_txt(url, params, filename, folder):
     """Функция для скачивания текстовых файлов.
     Args:
         url (str): Адрес ресурса, с которого нужно скачать текст.
@@ -99,7 +101,7 @@ def parse_book_page(html, url):
 
     return book_properties
 
-def download_book_collection(book_collection):
+def download_book_collection(book_collection, base_folder, **kwargs):
 
     DELAY_VALUE = 60
 
@@ -143,33 +145,37 @@ def download_book_collection(book_collection):
         url = f'{BASE_URL}/txt.php'
         params = {'id': book_id}
 
-        try:
-            download_txt(url, params, book_file_name)
-        except requests.ConnectionError:
-            eprint(f'{url}. Connection error.')
-            delay = DELAY_VALUE
-            continue
-        except requests.HTTPError:
-            eprint(f'book id = {book_id} <{book_properties["name"]}> is not downloaded')
-            continue
+        if 'skip_txt' not in kwargs or not kwargs['skip_txt']:
+            try:
+                download_txt(url, params, book_file_name, os.path.join(base_folder, TEXTS_FOLDER))
+            except requests.ConnectionError:
+                eprint(f'{url}. Connection error.')
+                delay = DELAY_VALUE
+                continue
+            except requests.HTTPError:
+                eprint(f'book id = {book_id} <{book_properties["name"]}> is not downloaded')
+                continue
 
-        img_url = urljoin(response_url, book_properties['img_url'])
-
-        try:
-            download_image(img_url, book_properties['img_name'])
-        except requests.ConnectionError:
-            eprint(f'{url}. Connection error.')
-            delay = DELAY_VALUE
-            continue
-        except requests.HTTPError:
-            eprint(f'image {img_url} is not downloaded')
-            continue
+        if 'skip_imgs' not in kwargs or not kwargs['skip_imgs']:
+            img_url = urljoin(response_url, book_properties['img_url'])
+            try:
+                download_image(img_url, book_properties['img_name'], os.path.join(base_folder, IMGS_FOLDER))
+            except requests.ConnectionError:
+                eprint(f'{url}. Connection error.')
+                delay = DELAY_VALUE
+                continue
+            except requests.HTTPError:
+                eprint(f'image {img_url} is not downloaded')
+                continue
 
 
 def main():
     parser = argparse.ArgumentParser(description='Download books from tululu.org')
     parser.add_argument('--start_id', type=int, default=1, help='First book id, default = 1')
     parser.add_argument('--end_id', type=int, default=1, help='Last book id, default = 1')
+    parser.add_argument('--dest_folder', type=str, default='', help='Folder to download content')
+    parser.add_argument('--skip_imgs', action='store_true', help='Skip download images')
+    parser.add_argument('--skip_txt', action='store_true', help='Skip download texts')
     args = parser.parse_args()
 
     if args.start_id > args.end_id:
@@ -178,7 +184,9 @@ def main():
 
     book_collection = (book_id for book_id in range(args.start_id, args.end_id + 1))
 
-    download_book_collection(book_collection)
+    dest_folders = make_download_folders(args.dest_folder)
+
+    download_book_collection(book_collection, args.dest_folder, skip_imgs=args.skip_imgs, skip_txt=args.skip_txt)
 
 if __name__ == '__main__':
     main()
