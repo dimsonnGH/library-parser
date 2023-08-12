@@ -3,7 +3,7 @@ import requests
 import os
 from main import get_page, parse_book_page, eprint, make_download_folders, download_book_collection
 from main import BASE_URL, TEXTS_FOLDER
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin
 import json
 import argparse
 import time
@@ -29,7 +29,7 @@ def main():
     parser = argparse.ArgumentParser(description='Download science fiction books from tululu.org')
     parser.add_argument('--start_page', type=int, default=1, help='First science fiction catalog page, default = 1')
     parser.add_argument('--end_page', type=int, help='Last science fiction catalog page, default = 1')
-    parser.add_argument('--dest_folder', type=str, default='', help='Folder to download content')
+    parser.add_argument('--dest_folder', type=str, default='books', help='Folder to download content')
     parser.add_argument('--skip_imgs', action='store_true', help='Skip download images')
     parser.add_argument('--skip_txt', action='store_true', help='Skip download texts')
 
@@ -61,7 +61,6 @@ def main():
         try:
             response = get_page(url)
             html = response.text
-            # response_url = response.url
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
             delay = DELAY_VALUE

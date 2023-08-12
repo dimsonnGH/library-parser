@@ -1,6 +1,5 @@
 import time
 from builtins import isinstance
-
 import requests
 import os
 from bs4 import BeautifulSoup
@@ -10,17 +9,19 @@ import argparse
 import sys
 import re
 
-
 BASE_URL = 'https://tululu.org'
-TEXTS_FOLDER = 'books'
+TEXTS_FOLDER = 'texts'
 IMGS_FOLDER = 'imgs'
+
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
+
 def make_download_folders(dest_folder):
     for folder_name in [TEXTS_FOLDER, IMGS_FOLDER, ]:
         os.makedirs(os.path.join(dest_folder, folder_name), exist_ok=True)
+
 
 def check_for_redirect(response):
     if response.history:
@@ -58,7 +59,7 @@ def download_image(url, filename, folder):
         filename (str): Имя файла, с которым сохранять.
         folder (str): Папка, куда сохранять.
     Returns:
-        str: Путь до файла, куда сохранён текст.
+        str: Путь до файла, куда сохранёно изображение.
     """
 
     response = requests.get(url)
@@ -71,6 +72,7 @@ def download_image(url, filename, folder):
 
     return file_path
 
+
 def get_page(url):
     response = requests.get(url)
     response.raise_for_status()
@@ -78,8 +80,8 @@ def get_page(url):
 
     return response
 
-def parse_book_page(html, url):
 
+def parse_book_page(html, url):
     soup = BeautifulSoup(html, 'lxml')
 
     title_tag = soup.select_one('h1')
@@ -101,8 +103,8 @@ def parse_book_page(html, url):
 
     return book_properties
 
-def download_book_collection(book_collection, base_folder, **kwargs):
 
+def download_book_collection(book_collection, base_folder, **kwargs):
     DELAY_VALUE = 60
 
     delay = 0
@@ -173,7 +175,7 @@ def main():
     parser = argparse.ArgumentParser(description='Download books from tululu.org')
     parser.add_argument('--start_id', type=int, default=1, help='First book id, default = 1')
     parser.add_argument('--end_id', type=int, default=1, help='Last book id, default = 1')
-    parser.add_argument('--dest_folder', type=str, default='', help='Folder to download content')
+    parser.add_argument('--dest_folder', type=str, default='books', help='Folder to download content')
     parser.add_argument('--skip_imgs', action='store_true', help='Skip download images')
     parser.add_argument('--skip_txt', action='store_true', help='Skip download texts')
     args = parser.parse_args()
@@ -184,9 +186,10 @@ def main():
 
     book_collection = (book_id for book_id in range(args.start_id, args.end_id + 1))
 
-    dest_folders = make_download_folders(args.dest_folder)
+    make_download_folders(args.dest_folder)
 
     download_book_collection(book_collection, args.dest_folder, skip_imgs=args.skip_imgs, skip_txt=args.skip_txt)
+
 
 if __name__ == '__main__':
     main()
