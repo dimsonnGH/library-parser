@@ -51,7 +51,7 @@ def download_txt(url, params, filename, folder):
     return file_path
 
 
-def download_image(url, filename, folder='imgs/'):
+def download_image(url, filename, folder):
     """Функция для скачивания изображений.
     Args:
         url (str): Адрес ресурса, с которого нужно скачать изображение.
