@@ -44,7 +44,7 @@ def main():
     max_page = int(tags[-1].text)
     end_page = max(args.end_page, max_page) if args.end_page else max_page
 
-    books_description = []
+    book_descriptions = []
     delay_value = 60
     delay = 0
     for page_num in range(args.start_page, end_page + 1):
@@ -71,17 +71,17 @@ def main():
 
         delay = 0
 
-        parse_category_page(url, html, books_description)
+        parse_category_page(url, html, book_descriptions)
 
     make_download_folders(args.dest_folder)
 
-    if books_description:
-        file_path = os.path.join(args.dest_folder, TEXTS_FOLDER, 'books_description.json')
+    if book_descriptions:
+        file_path = os.path.join(args.dest_folder, TEXTS_FOLDER, 'book_descriptions.json')
         with open(file_path, 'wt', encoding="utf-8") as file:
-            dumps = json.dumps(books_description, indent=4, ensure_ascii=False)
+            dumps = json.dumps(book_descriptions, indent=4, ensure_ascii=False)
             file.write(dumps)
 
-    book_collection = (book['url'] for book in books_description)
+    book_collection = (book['url'] for book in book_descriptions)
     download_book_collection(book_collection, args.dest_folder, skip_imgs=args.skip_imgs, skip_txt=args.skip_txt)
 
 
