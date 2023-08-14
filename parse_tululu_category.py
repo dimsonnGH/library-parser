@@ -51,9 +51,7 @@ def main():
         if delay:
             time.sleep(delay)
 
-        page_num_url = f'{page_num}/'
-
-        url = start_url + page_num_url
+        url = f'{start_url}{page_num}/'
 
         try:
             response = get_page(url)
