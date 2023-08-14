@@ -51,10 +51,7 @@ def main():
         if delay:
             time.sleep(delay)
 
-        if page_num == 1:
-            page_num_url = ''
-        else:
-            page_num_url = f'{page_num}/'
+        page_num_url = f'{page_num}/'
 
         url = start_url + page_num_url
 
