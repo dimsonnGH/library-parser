@@ -18,8 +18,6 @@ def parse_category_page(response_url, html, book_descriptions):
         book_url = img_tag['href']
         book_url = urljoin(response_url, book_url)
 
-        print(book_url)
-
         response = get_page(book_url)
         book_html = response.text
         book_properties = parse_book_page(book_html, book_url)
