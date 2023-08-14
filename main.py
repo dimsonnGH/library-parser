@@ -105,7 +105,7 @@ def parse_book_page(html, url):
 
 
 def download_book_collection(book_collection, base_folder, **kwargs):
-    DELAY_VALUE = 60
+    delay_value = 60
 
     delay = 0
     for book_descriptor in book_collection:
@@ -134,7 +134,7 @@ def download_book_collection(book_collection, base_folder, **kwargs):
             response_url = response.url
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
-            delay = DELAY_VALUE
+            delay = delay_value
             continue
         except requests.HTTPError:
             eprint(f'page {url}> not exists')
@@ -152,7 +152,7 @@ def download_book_collection(book_collection, base_folder, **kwargs):
                 download_txt(url, params, book_file_name, os.path.join(base_folder, TEXTS_FOLDER))
             except requests.ConnectionError:
                 eprint(f'{url}. Connection error.')
-                delay = DELAY_VALUE
+                delay = delay_value
                 continue
             except requests.HTTPError:
                 eprint(f'book id = {book_id} <{book_properties["name"]}> is not downloaded')
@@ -164,7 +164,7 @@ def download_book_collection(book_collection, base_folder, **kwargs):
                 download_image(img_url, book_properties['img_name'], os.path.join(base_folder, IMGS_FOLDER))
             except requests.ConnectionError:
                 eprint(f'{url}. Connection error.')
-                delay = DELAY_VALUE
+                delay = delay_value
                 continue
             except requests.HTTPError:
                 eprint(f'image {img_url} is not downloaded')

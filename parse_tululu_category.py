@@ -45,7 +45,7 @@ def main():
     end_page = max(args.end_page, max_page) if args.end_page else max_page
 
     books_description = []
-    DELAY_VALUE = 60
+    delay_value = 60
     delay = 0
     for page_num in range(args.start_page, end_page + 1):
         if delay:
@@ -63,7 +63,7 @@ def main():
             html = response.text
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
-            delay = DELAY_VALUE
+            delay = delay_value
             continue
         except requests.HTTPError:
             eprint(f'page {url}> not exists')
