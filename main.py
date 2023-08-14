@@ -115,9 +115,9 @@ def download_book_collection(book_collection, base_folder, **kwargs):
             url = f'{BASE_URL}/b{book_id}/'
         elif isinstance(book_descriptor, str):
             url = book_descriptor
-            m = re.search(f'{BASE_URL}/b(.+)/', url)
-            if m:
-                book_id = m.group(1)
+            match_object = re.search(f'{BASE_URL}/b(.+)/', url)
+            if match_object:
+                book_id = match_object.group(1)
             else:
                 eprint(f'{url}. Incorrect url format. Book id missing')
                 continue
