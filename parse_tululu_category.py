@@ -9,9 +9,10 @@ import argparse
 import time
 
 
-def parse_category_page(response_url, html, books_description):
+def parse_category_page(response_url, html, book_descriptions):
     soup = BeautifulSoup(html, 'lxml')
 
+    new_book_descriptions = [*book_descriptions]
     img_tags = soup.select('.bookimage a')
     for img_tag in img_tags:
         book_url = img_tag['href']
@@ -22,7 +23,9 @@ def parse_category_page(response_url, html, books_description):
         response = get_page(book_url)
         book_html = response.text
         book_properties = parse_book_page(book_html, book_url)
-        books_description.append(book_properties)
+        new_book_descriptions.append(book_properties)
+
+    return new_book_descriptions
 
 
 def main():
@@ -66,7 +69,7 @@ def main():
 
         delay = 0
 
-        parse_category_page(url, html, book_descriptions)
+        book_descriptions = parse_category_page(url, html, book_descriptions)
 
     make_download_folders(args.dest_folder)
 
