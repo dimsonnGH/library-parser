@@ -18,10 +18,18 @@ def parse_category_page(response_url, html, book_descriptions):
         book_url = img_tag['href']
         book_url = urljoin(response_url, book_url)
 
-        response = get_page(book_url)
-        book_html = response.text
-        book_properties = parse_book_page(book_html, book_url)
-        new_book_descriptions.append(book_properties)
+        try:
+            response = get_page(book_url)
+            book_html = response.text
+            book_properties = parse_book_page(book_html, book_url)
+            new_book_descriptions.append(book_properties)
+        except requests.ConnectionError:
+            eprint(f'{book_url}. Connection error.')
+            time.sleep(20)
+            continue
+        except requests.HTTPError:
+            eprint(f'page {book_url}> not exists')
+            continue
 
     return new_book_descriptions
 
@@ -47,27 +55,20 @@ def main():
 
     book_descriptions = []
     delay_value = 60
-    delay = 0
     for page_num in range(args.start_page, end_page + 1):
-        if delay:
-            time.sleep(delay)
 
-        url = f'{start_url}{page_num}/'
+        url = urljoin(start_url, str(page_num))
 
         try:
             response = get_page(url)
-            html = response.text
+            book_descriptions = parse_category_page(url, response.text, book_descriptions)
         except requests.ConnectionError:
             eprint(f'{url}. Connection error.')
-            delay = delay_value
+            time.sleep(delay_value)
             continue
         except requests.HTTPError:
             eprint(f'page {url}> not exists')
             continue
-
-        delay = 0
-
-        book_descriptions = parse_category_page(url, html, book_descriptions)
 
     make_download_folders(args.dest_folder)
 

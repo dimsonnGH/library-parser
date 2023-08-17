@@ -105,7 +105,7 @@ def parse_book_page(html, url):
 
 
 def download_book_collection(book_collection, base_folder, **kwargs):
-    delay_value = 60
+    delay_value = 20
 
     delay = 0
     for book_descriptor in book_collection:
