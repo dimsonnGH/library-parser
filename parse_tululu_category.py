@@ -75,8 +75,6 @@ def main():
     if book_descriptions:
         file_path = os.path.join(args.dest_folder, TEXTS_FOLDER, 'book_descriptions.json')
         with open(file_path, 'wt', encoding="utf-8") as file:
-            '''dumps = json.dumps(book_descriptions, indent=4, ensure_ascii=False)
-            file.write(dumps)'''
             json.dump(book_descriptions, file, indent=4, ensure_ascii=False)
 
     book_collection = (book['url'] for book in book_descriptions)

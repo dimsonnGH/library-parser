@@ -18,11 +18,6 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
-def make_download_folders(dest_folder):
-    for folder_name in [TEXTS_FOLDER, IMGS_FOLDER, ]:
-        os.makedirs(os.path.join(dest_folder, folder_name), exist_ok=True)
-
-
 def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
@@ -186,7 +181,8 @@ def main():
 
     book_collection = (book_id for book_id in range(args.start_id, args.end_id + 1))
 
-    make_download_folders(args.dest_folder)
+    os.makedirs(os.path.join(args.dest_folder, TEXTS_FOLDER), exist_ok=True)
+    os.makedirs(os.path.join(args.dest_folder, IMGS_FOLDER), exist_ok=True)
 
     download_book_collection(book_collection, args.dest_folder, skip_imgs=args.skip_imgs, skip_txt=args.skip_txt)
 
